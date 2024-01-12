@@ -1,3 +1,5 @@
+container_name=ecom-pgdb
+
 createdb:
 	docker exec -it $(container_name) psql -U postgres -c "CREATE DATABASE ecommerce;"
 
