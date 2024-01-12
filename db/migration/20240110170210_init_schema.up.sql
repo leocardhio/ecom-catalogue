@@ -1,9 +1,9 @@
 CREATE TYPE "product_condition" AS ENUM (
-  'brand_new',
-  'like_new',
-  'lightly_used',
-  'well_used',
-  'heavily_used'
+  'Brand New',
+  'Like New',
+  'Lightly Used',
+  'Well Used',
+  'Heavily Used'
 );
 
 CREATE TABLE "products" (
