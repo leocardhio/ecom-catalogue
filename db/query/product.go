@@ -7,11 +7,9 @@ const (
 		name, 
 		price, 
 		description, 
-		condition, 
-		updated_at, 
-		deleted_at
+		condition
 	) VALUES (
-		$1, $2, $3, $4, $5, $6, $7
-	) RETURNING *;
+		$1, $2, $3, $4, $5
+	) RETURNING *
 `
 )

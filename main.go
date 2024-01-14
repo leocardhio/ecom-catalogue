@@ -1,31 +1,37 @@
 package main
 
 import (
-	"database/sql"
+	"fmt"
+	"log"
 
 	"github.com/elastic/go-elasticsearch/v7"
+	"github.com/leocardhio/ecom-catalogue/config"
 	"github.com/leocardhio/ecom-catalogue/db"
-)
-
-var (
-	sqldb *sql.DB
-	esdb *elasticsearch.Client
+	"github.com/leocardhio/ecom-catalogue/router"
 )
 
 
 func main() {
+	cfg := config.NewConfig().Load()
+	
 	sqlcfg := db.SQLConfig{
-		Host:     "localhost",
-		Port:     "5432",
-		User:     "postgres",
-		Password: "password",
-		Database: db.POSTGRES,
+		Host:     cfg.SQLHost,
+		Port:     cfg.SQLPort,
+		User:     cfg.SQLUser,
+		Password: cfg.SQLPassword,
+		Database: cfg.SQLDatabase,
+		Driver	: db.SQLType(cfg.SQLDriver),
 	}
 
 	escfg := elasticsearch.Config{
-		Addresses: []string{"http://localhost:9200"},
+		Addresses: []string{fmt.Sprintf("http://%s:%s", cfg.ESHost, cfg.ESPort)},
 	}
 
-	sqldb, esdb = db.ConnectDB(sqlcfg, escfg)
-	defer sqldb.Close()
+	dbs := db.NewDatabase().Connect(sqlcfg, escfg)
+	defer dbs.Close()
+
+	r := router.NewRouter(*dbs)
+	if err := r.Run(); err != nil {
+		log.Fatal("failed to run server", err)
+	}
 }

@@ -9,10 +9,14 @@ dropdb:
 create-migration:
 	migrate create -dir ./db/migration -ext sql $(name)
 
+#! Need Unix-based terminal to authenticate with docker
 migrateup:
-	 migrate -path ./db/migration -database postgres://postgres:password@localhost:5432/ecommerce?sslmode=disable -verbose up
+	 migrate -path ./db/migration -database postgres://postgres:password@localhost:5432/ecommerce?sslmode=disable -verbose up 3
 
 migratedown:
-	migrate -path ./db/migration -database postgres://postgres:password@localhost:5432/ecommerce?sslmode=disable -verbose down
+	migrate -path ./db/migration -database postgres://postgres:password@localhost:5432/ecommerce?sslmode=disable -verbose down 3
 
-.PHONY: createdb dropdb create-migration migrateup migratedown
+start:
+	go run main.go -env=$(env)
+
+.PHONY: createdb dropdb create-migration migrateup migratedown start

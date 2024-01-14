@@ -6,6 +6,7 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/leocardhio/ecom-catalogue/class"
+	"github.com/leocardhio/ecom-catalogue/db"
 	"github.com/leocardhio/ecom-catalogue/db/query"
 )
 
@@ -22,21 +23,23 @@ type productRepository struct {
 	writeDB *sql.DB
 }
 
-func NewProductRepository(sqldb *sql.DB, esdb *elasticsearch.Client) IProductRepository {
+func NewProductRepository(dbs db.Database) IProductRepository {
 	return &productRepository{
-		readDB: esdb,
-		writeDB: sqldb,
+		readDB: dbs.GetES(),
+		writeDB: dbs.GetSQL(),
 	}
 }
 
 func (repo *productRepository) CreateProduct(ctx context.Context, product class.Product) (class.Product, error) {
-	row, err := repo.writeDB.QueryContext(ctx, query.CreateProduct, product.Ulid, product.Name, product.Price, product.Description, product.Condition, product.UpdatedAt, product.DeletedAt)
+	// TODO: Remove RETURNING clause
+	var createdProduct class.Product
+
+	row, err := repo.writeDB.QueryContext(ctx, query.CreateProduct, product.Ulid, product.Name, product.Price, product.Description, product.Condition)
 	if err != nil {
-		panic(err)
+		return createdProduct, err
 	}
 	defer row.Close()
 	
-	var createdProduct class.Product
 	row.Next() 
 	if err = row.Err(); err != nil { return createdProduct, err }
 
@@ -56,17 +59,21 @@ func (repo *productRepository) CreateProduct(ctx context.Context, product class.
 }
 
 func (repo *productRepository) GetProduct(ctx context.Context, ulid string) (class.Product, error) {
+	// TODO: To be implemented
 	return class.Product{}, nil
 }
 
 func (repo *productRepository) GetProducts(ctx context.Context) ([]class.Product, error) {
+	// TODO: To be implemented
 	return []class.Product{}, nil
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, product class.Product) (class.Product, error) {
+	// TODO: To be implemented
 	return class.Product{}, nil
 }
 
 func (repo *productRepository) DeleteProduct(ctx context.Context, ulid string) error {
+	// TODO: To be implemented
 	return nil
 }
