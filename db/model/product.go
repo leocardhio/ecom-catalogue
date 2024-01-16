@@ -22,7 +22,8 @@ type CreateProductRequest struct {
 }
 
 type CreateProductResponse struct {
-	Id string `json:"id" binding:"required"`
+	Id    string `json:"id" binding:"required"`
+	Count int64  `json:"count" binding:"required"`
 }
 
 type GetProductRequest struct {
@@ -58,7 +59,7 @@ type UpdateProductRequest struct {
 }
 
 type UpdateProductResponse struct {
-	Id string `json:"id" binding:"required"`
+	Count int64 `json:"count" binding:"required"`
 }
 
 type DeleteProductRequest struct {
@@ -66,5 +67,5 @@ type DeleteProductRequest struct {
 }
 
 type DeleteProductResponse struct {
-	DeletedAt *time.Time `json:"deleted_at" binding:"required"`
+	Count int64 `json:"count" binding:"required"`
 }

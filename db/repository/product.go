@@ -11,11 +11,11 @@ import (
 )
 
 type IProductRepository interface {
-	CreateProduct(ctx context.Context, arg CreateProductParams) (class.Product, error)
+	CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error)
 	GetProduct(ctx context.Context, arg GetProductParams) (class.Product, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]class.Product, error)
-	UpdateProduct(ctx context.Context, arg UpdateProductParams) (class.Product, error)
-	DeleteProduct(ctx context.Context, arg DeleteProductParams) (class.Product, error)
+	UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error)
+	DeleteProduct(ctx context.Context, arg DeleteProductParams) (int64, error)
 }
 
 type productRepository struct {
@@ -38,34 +38,19 @@ type CreateProductParams struct {
 	Condition   class.ProductCondition
 }
 
-func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (class.Product, error) {
-	// TODO: refine RETURNING clause
-	var createdProduct class.Product
+func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
+	var count int64
 
-	row, err := repo.writeDB.QueryContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
+	result, err := repo.writeDB.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
 	if err != nil {
-		return createdProduct, err
-	}
-	defer row.Close()
-
-	row.Next()
-	if err = row.Err(); err != nil {
-		return createdProduct, err
+		return count, err
 	}
 
-	if err = row.Scan(
-		&createdProduct.Id,
-		&createdProduct.Name,
-		&createdProduct.Price,
-		&createdProduct.Description,
-		&createdProduct.Condition,
-		&createdProduct.UpdatedAt,
-		&createdProduct.DeletedAt,
-	); err != nil {
-		return createdProduct, err
+	if count, err = result.RowsAffected(); err != nil {
+		return count, err
 	}
 
-	return createdProduct, nil
+	return count, nil
 }
 
 type GetProductParams struct {
@@ -95,52 +80,36 @@ type UpdateProductParams struct {
 	Condition   class.ProductCondition
 }
 
-func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (class.Product, error) {
-	// TODO: refine RETURNING clause
-	var updatedProduct class.Product
+func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
+	var count int64
 
-	row, err := repo.writeDB.QueryContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
+	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
 	if err != nil {
-		return updatedProduct, err
-	}
-	defer row.Close()
-
-	row.Next()
-	if err := row.Scan(
-		&updatedProduct.Id,
-		&updatedProduct.Name,
-		&updatedProduct.Price,
-		&updatedProduct.Description,
-		&updatedProduct.Condition,
-		&updatedProduct.UpdatedAt,
-		&updatedProduct.DeletedAt,
-	); err != nil {
-		return updatedProduct, err
+		return count, err
 	}
 
-	return updatedProduct, nil
+	if count, err = result.RowsAffected(); err != nil {
+		return count, err
+	}
+
+	return count, nil
 }
 
 type DeleteProductParams struct {
 	Id string
 }
 
-func (repo *productRepository) DeleteProduct(ctx context.Context, arg DeleteProductParams) (class.Product, error) {
-	// TODO: refine RETURNING clause
-	var deletedProduct class.Product
+func (repo *productRepository) DeleteProduct(ctx context.Context, arg DeleteProductParams) (int64, error) {
+	var count int64
 
-	row, err := repo.writeDB.QueryContext(ctx, query.DeleteProduct, arg.Id)
+	result, err := repo.writeDB.ExecContext(ctx, query.DeleteProduct, arg.Id)
 	if err != nil {
-		return deletedProduct, err
-	}
-	defer row.Close()
-
-	row.Next()
-	if err := row.Scan(
-		&deletedProduct.DeletedAt,
-	); err != nil {
-		return deletedProduct, err
+		return count, err
 	}
 
-	return deletedProduct, nil
+	if count, err = result.RowsAffected(); err != nil {
+		return count, err
+	}
+
+	return count, nil
 }

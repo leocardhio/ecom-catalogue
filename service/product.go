@@ -28,9 +28,10 @@ func NewProductService(productRepository repository.IProductRepository) IProduct
 
 func (service *productService) CreateProduct(ctx context.Context, req model.CreateProductRequest) (model.CreateProductResponse, error) {
 	var res model.CreateProductResponse
-	ulid := util.GetUlid()
+	var err error
 
-	product, err := service.productRepository.CreateProduct(ctx, repository.CreateProductParams{
+	ulid := util.GetUlid()
+	res.Count, err = service.productRepository.CreateProduct(ctx, repository.CreateProductParams{
 		Id:          ulid,
 		Name:        req.Name,
 		Price:       req.Price,
@@ -41,7 +42,7 @@ func (service *productService) CreateProduct(ctx context.Context, req model.Crea
 		return res, err
 	}
 
-	res.Id = product.Id
+	res.Id = ulid
 	return res, nil
 }
 
@@ -61,8 +62,9 @@ func (service *productService) GetProducts(ctx context.Context, req model.GetPro
 
 func (service *productService) UpdateProduct(ctx context.Context, req model.UpdateProductRequest) (model.UpdateProductResponse, error) {
 	var res model.UpdateProductResponse
+	var err error
 
-	product, err := service.productRepository.UpdateProduct(ctx, repository.UpdateProductParams{
+	res.Count, err = service.productRepository.UpdateProduct(ctx, repository.UpdateProductParams{
 		Id:          req.Id,
 		Name:        req.Name,
 		Price:       req.Price,
@@ -73,22 +75,19 @@ func (service *productService) UpdateProduct(ctx context.Context, req model.Upda
 		return res, err
 	}
 
-	res.Id = product.Id
-
 	return res, nil
 }
 
 func (service *productService) DeleteProduct(ctx context.Context, req model.DeleteProductRequest) (model.DeleteProductResponse, error) {
 	var res model.DeleteProductResponse
+	var err error
 
-	product, err := service.productRepository.DeleteProduct(ctx, repository.DeleteProductParams{
+	res.Count, err = service.productRepository.DeleteProduct(ctx, repository.DeleteProductParams{
 		Id: req.Id,
 	})
 	if err != nil {
 		return res, err
 	}
-
-	res.DeletedAt = product.DeletedAt
 
 	return res, nil
 }

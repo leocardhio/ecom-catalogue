@@ -16,14 +16,12 @@ const (
 	UpdateProduct = `
 	UPDATE products
 	SET name = $1, price = $2, description = $3, condition = $4, updated_at = NOW()
-	WHERE id = $5
-	RETURNING *
+	WHERE id = $5 AND deleted_at IS NULL
 	`
 
 	DeleteProduct = `
 	UPDATE products
 	SET deleted_at = NOW()
-	WHERE id = $1
-	RETURNING deleted_at
+	WHERE id = $1 AND deleted_at IS NULL
 	`
 )
