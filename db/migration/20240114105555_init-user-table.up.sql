@@ -1,5 +1,5 @@
 CREATE TABLE "users" (
-  "ulid" varchar(26) PRIMARY KEY NOT NULL,
+  "id" varchar(26) PRIMARY KEY NOT NULL,
   "username" varchar(16) UNIQUE NOT NULL,
   "city" varchar NOT NULL,
   "rating" real,
