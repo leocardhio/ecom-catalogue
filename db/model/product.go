@@ -64,3 +64,7 @@ type UpdateProductResponse struct {
 type DeleteProductRequest struct {
 	Id string `uri:"id" binding:"required"`
 }
+
+type DeleteProductResponse struct {
+	DeletedAt *time.Time `json:"deleted_at" binding:"required"`
+}

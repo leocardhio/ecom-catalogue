@@ -77,5 +77,19 @@ func (controller *productController) UpdateProduct(c *gin.Context) {
 }
 
 func (controller *productController) DeleteProduct(c *gin.Context) {
-	// TODO: Implement me
+	var req model.DeleteProductRequest
+	var err error
+
+	if err = c.ShouldBindUri(&req); err != nil {
+		util.ResponseBadRequest(c, err)
+		return
+	}
+
+	res, err := controller.productService.DeleteProduct(c, req)
+	if err != nil {
+		util.ResponseInternalServerError(c, err)
+		return
+	}
+
+	util.ResponseDeleted(c, res)
 }

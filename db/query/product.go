@@ -19,4 +19,11 @@ const (
 	WHERE id = $5
 	RETURNING *
 	`
+
+	DeleteProduct = `
+	UPDATE products
+	SET deleted_at = NOW()
+	WHERE id = $1
+	RETURNING deleted_at
+	`
 )

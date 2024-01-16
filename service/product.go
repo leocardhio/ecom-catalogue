@@ -13,7 +13,7 @@ type IProductService interface {
 	GetProduct(ctx context.Context, req model.GetProductRequest) (model.ProductModel, error)
 	GetProducts(ctx context.Context, req model.GetProductsRequest) (model.GetProductsResponse, error)
 	UpdateProduct(ctx context.Context, req model.UpdateProductRequest) (model.UpdateProductResponse, error)
-	DeleteProduct(ctx context.Context, req model.DeleteProductRequest) error
+	DeleteProduct(ctx context.Context, req model.DeleteProductRequest) (model.DeleteProductResponse, error)
 }
 
 type productService struct {
@@ -78,7 +78,17 @@ func (service *productService) UpdateProduct(ctx context.Context, req model.Upda
 	return res, nil
 }
 
-func (service *productService) DeleteProduct(ctx context.Context, req model.DeleteProductRequest) error {
-	// TODO: To be implemented
-	return nil
+func (service *productService) DeleteProduct(ctx context.Context, req model.DeleteProductRequest) (model.DeleteProductResponse, error) {
+	var res model.DeleteProductResponse
+
+	product, err := service.productRepository.DeleteProduct(ctx, repository.DeleteProductParams{
+		Id: req.Id,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.DeletedAt = product.DeletedAt
+
+	return res, nil
 }

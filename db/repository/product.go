@@ -15,7 +15,7 @@ type IProductRepository interface {
 	GetProduct(ctx context.Context, arg GetProductParams) (class.Product, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]class.Product, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (class.Product, error)
-	DeleteProduct(ctx context.Context, arg DeleteProductParams) error
+	DeleteProduct(ctx context.Context, arg DeleteProductParams) (class.Product, error)
 }
 
 type productRepository struct {
@@ -39,7 +39,7 @@ type CreateProductParams struct {
 }
 
 func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (class.Product, error) {
-	// TODO: Remove RETURNING clause
+	// TODO: refine RETURNING clause
 	var createdProduct class.Product
 
 	row, err := repo.writeDB.QueryContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
@@ -96,7 +96,7 @@ type UpdateProductParams struct {
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (class.Product, error) {
-	// TODO: Remove RETURNING clause
+	// TODO: refine RETURNING clause
 	var updatedProduct class.Product
 
 	row, err := repo.writeDB.QueryContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
@@ -125,7 +125,22 @@ type DeleteProductParams struct {
 	Id string
 }
 
-func (repo *productRepository) DeleteProduct(ctx context.Context, arg DeleteProductParams) error {
-	// TODO: To be implemented
-	return nil
+func (repo *productRepository) DeleteProduct(ctx context.Context, arg DeleteProductParams) (class.Product, error) {
+	// TODO: refine RETURNING clause
+	var deletedProduct class.Product
+
+	row, err := repo.writeDB.QueryContext(ctx, query.DeleteProduct, arg.Id)
+	if err != nil {
+		return deletedProduct, err
+	}
+	defer row.Close()
+
+	row.Next()
+	if err := row.Scan(
+		&deletedProduct.DeletedAt,
+	); err != nil {
+		return deletedProduct, err
+	}
+
+	return deletedProduct, nil
 }
