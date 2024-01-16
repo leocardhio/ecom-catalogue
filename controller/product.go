@@ -12,6 +12,7 @@ type IProductController interface {
 	GetProduct(c *gin.Context)
 	GetProducts(c *gin.Context)
 	UpdateProduct(c *gin.Context)
+	UpdateProductStatus(c *gin.Context)
 	DeleteProduct(c *gin.Context)
 }
 
@@ -68,6 +69,29 @@ func (controller *productController) UpdateProduct(c *gin.Context) {
 	}
 
 	res, err := controller.productService.UpdateProduct(c, req)
+	if err != nil {
+		util.ResponseInternalServerError(c, err)
+		return
+	}
+
+	util.ResponseUpdated(c, res)
+}
+
+func (controller *productController) UpdateProductStatus(c *gin.Context) {
+	var req model.UpdateProductStatusRequest
+	var err error
+
+	if err = c.ShouldBindUri(&req.UpdateProductStatusRequestURI); err != nil {
+		util.ResponseBadRequest(c, err)
+		return
+	}
+
+	if err = c.ShouldBindJSON(&req.UpdateProductStatusRequestBody); err != nil {
+		util.ResponseBadRequest(c, err)
+		return
+	}
+
+	res, err := controller.productService.UpdateProductStatus(c, req)
 	if err != nil {
 		util.ResponseInternalServerError(c, err)
 		return

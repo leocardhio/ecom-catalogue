@@ -19,6 +19,12 @@ const (
 	WHERE id = $5 AND deleted_at IS NULL
 	`
 
+	UpdateProductStatus = `
+	UPDATE products
+	SET is_sold = $1, updated_at = NOW()
+	WHERE id = $2 AND deleted_at IS NULL
+	`
+
 	DeleteProduct = `
 	UPDATE products
 	SET deleted_at = NOW()

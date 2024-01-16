@@ -13,6 +13,7 @@ type IProductService interface {
 	GetProduct(ctx context.Context, req model.GetProductRequest) (model.ProductModel, error)
 	GetProducts(ctx context.Context, req model.GetProductsRequest) (model.GetProductsResponse, error)
 	UpdateProduct(ctx context.Context, req model.UpdateProductRequest) (model.UpdateProductResponse, error)
+	UpdateProductStatus(ctx context.Context, req model.UpdateProductStatusRequest) (model.UpdateProductStatusResponse, error)
 	DeleteProduct(ctx context.Context, req model.DeleteProductRequest) (model.DeleteProductResponse, error)
 }
 
@@ -70,6 +71,21 @@ func (service *productService) UpdateProduct(ctx context.Context, req model.Upda
 		Price:       req.Price,
 		Description: req.Description,
 		Condition:   req.Condition,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	return res, nil
+}
+
+func (service *productService) UpdateProductStatus(ctx context.Context, req model.UpdateProductStatusRequest) (model.UpdateProductStatusResponse, error) {
+	var res model.UpdateProductStatusResponse
+	var err error
+
+	res.Count, err = service.productRepository.UpdateProductStatus(ctx, repository.UpdateProductStatusParams{
+		Id:     req.Id,
+		IsSold: req.IsSold,
 	})
 	if err != nil {
 		return res, err

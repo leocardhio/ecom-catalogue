@@ -15,6 +15,7 @@ type IProductRepository interface {
 	GetProduct(ctx context.Context, arg GetProductParams) (class.Product, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]class.Product, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error)
+	UpdateProductStatus(ctx context.Context, arg UpdateProductStatusParams) (int64, error)
 	DeleteProduct(ctx context.Context, arg DeleteProductParams) (int64, error)
 }
 
@@ -84,6 +85,26 @@ func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProd
 	var count int64
 
 	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
+	if err != nil {
+		return count, err
+	}
+
+	if count, err = result.RowsAffected(); err != nil {
+		return count, err
+	}
+
+	return count, nil
+}
+
+type UpdateProductStatusParams struct {
+	Id     string
+	IsSold bool
+}
+
+func (repo *productRepository) UpdateProductStatus(ctx context.Context, arg UpdateProductStatusParams) (int64, error) {
+	var count int64
+
+	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProductStatus, arg.IsSold, arg.Id)
 	if err != nil {
 		return count, err
 	}

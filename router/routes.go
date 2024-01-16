@@ -39,5 +39,6 @@ func setRouter(r *gin.Engine, controllers Controllers) {
 	ver.GET("/products/:id", controllers.ProductController.GetProduct)
 	ver.GET("/products", controllers.ProductController.GetProducts)
 	ver.PUT("/products/:id", controllers.ProductController.UpdateProduct)
+	ver.PATCH("/products/:id/status", controllers.ProductController.UpdateProductStatus)
 	ver.DELETE("/products/:id", controllers.ProductController.DeleteProduct)
 }

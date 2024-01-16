@@ -62,6 +62,23 @@ type UpdateProductResponse struct {
 	Count int64 `json:"count" binding:"required"`
 }
 
+type UpdateProductStatusRequestURI struct {
+	Id string `uri:"id" binding:"required"`
+}
+
+type UpdateProductStatusRequestBody struct {
+	IsSold bool `json:"is_sold" binding:"required"`
+}
+
+type UpdateProductStatusRequest struct {
+	UpdateProductStatusRequestURI
+	UpdateProductStatusRequestBody
+}
+
+type UpdateProductStatusResponse struct {
+	Count int64 `json:"count" binding:"required"`
+}
+
 type DeleteProductRequest struct {
 	Id string `uri:"id" binding:"required"`
 }
