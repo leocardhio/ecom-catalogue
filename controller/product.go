@@ -26,14 +26,15 @@ func NewProductController(service service.IProductService) IProductController {
 }
 
 func (controller *productController) CreateProduct(c *gin.Context) {
-	var product model.CreateProductRequest
+	var req model.CreateProductRequest
+	var err error
 
-	if err := c.ShouldBindJSON(&product); err != nil {
+	if err = c.ShouldBindJSON(&req); err != nil {
 		util.ResponseBadRequest(c, err)
 		return
 	}
 
-	res, err := controller.productService.CreateProduct(c, product)
+	res, err := controller.productService.CreateProduct(c, req)
 	if err != nil {
 		util.ResponseInternalServerError(c, err)
 		return
@@ -51,9 +52,30 @@ func (controller *productController) GetProducts(c *gin.Context) {
 }
 
 func (controller *productController) UpdateProduct(c *gin.Context) {
-	// TODO: Implement me
+	var req model.UpdateProductRequest
+	var err error
+
+	err = c.ShouldBindUri(&req.UpdateProductRequestURI)
+	if err != nil {
+		util.ResponseBadRequest(c, err)
+		return
+	}
+
+	err = c.ShouldBindJSON(&req.UpdateProductRequestBody)
+	if err != nil {
+		util.ResponseBadRequest(c, err)
+		return
+	}
+
+	res, err := controller.productService.UpdateProduct(c, req)
+	if err != nil {
+		util.ResponseInternalServerError(c, err)
+		return
+	}
+
+	util.ResponseUpdated(c, res)
 }
 
 func (controller *productController) DeleteProduct(c *gin.Context) {
 	// TODO: Implement me
-}	
+}

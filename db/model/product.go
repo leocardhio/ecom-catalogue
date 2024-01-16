@@ -7,47 +7,60 @@ import (
 )
 
 type ProductModel struct {
-	Name        string `json:"name"`
-	Price       int    `json:"price"`
-	Description string `json:"description"`
-	Condition   class.ProductCondition `json:"condition"`
-	UpdatedAt   *time.Time `json:"updated_at"`
+	Name        string                 `json:"name" binding:"required"`
+	Price       uint                   `json:"price" binding:"required"`
+	Description string                 `json:"description" binding:"required"`
+	Condition   class.ProductCondition `json:"condition" binding:"required"`
+	UpdatedAt   *time.Time             `json:"updated_at"`
 }
 
 type CreateProductRequest struct {
-	Name        string `json:"name"`
-	Price       int    `json:"price"`
-	Description string `json:"description"`
-	Condition   class.ProductCondition `json:"condition"`
+	Name        string                 `json:"name" binding:"required"`
+	Price       uint                   `json:"price" binding:"required"`
+	Description string                 `json:"description" binding:"required"`
+	Condition   class.ProductCondition `json:"condition" binding:"required"`
 }
 
 type CreateProductResponse struct {
-	Ulid string `json:"ulid"`
+	Id string `json:"id" binding:"required"`
 }
 
 type GetProductRequest struct {
-	Ulid string `json:"ulid"`
+	Id string `uri:"id" binding:"required"`
 }
 
 type GetProductsRequest struct {
-	Limit  int `json:"limit"`
-	Offset int `json:"offset"`
+	PageSize   uint `json:"limit" binding:"required"`
+	PageNumber uint `json:"offset" binding:"required"`
 }
 
 type GetProductsResponse struct {
-	Products []ProductModel `json:"products"`
-	Count    int            `json:"count"`
-	Page 		int            `json:"page"`
+	Products  []ProductModel `json:"products" binding:"required"`
+	Count     uint           `json:"count" binding:"required"`
+	Page      uint           `json:"page" binding:"required"`
+	TotalPage uint           `json:"total_page" binding:"required"`
+}
+
+type UpdateProductRequestURI struct {
+	Id string `uri:"id" binding:"required"`
+}
+
+type UpdateProductRequestBody struct {
+	Name        string                 `json:"name" binding:"required"`
+	Price       uint                   `json:"price" binding:"required"`
+	Description string                 `json:"description" binding:"required"`
+	Condition   class.ProductCondition `json:"condition" binding:"required"`
 }
 
 type UpdateProductRequest struct {
-	Ulid        string `json:"ulid"`
-	Name        string `json:"name"`
-	Price       int    `json:"price"`
-	Description string `json:"description"`
-	Condition 	class.ProductCondition `json:"condition"`
+	UpdateProductRequestURI
+	UpdateProductRequestBody
+}
+
+type UpdateProductResponse struct {
+	Id string `json:"id" binding:"required"`
 }
 
 type DeleteProductRequest struct {
-	Ulid string `json:"ulid"`
+	Id string `uri:"id" binding:"required"`
 }

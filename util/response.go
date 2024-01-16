@@ -11,6 +11,11 @@ func ResponseCreated(c *gin.Context, data interface{}) {
 	c.JSON(http.StatusCreated, gin.H{"message": "data successfully created", "data": data})
 }
 
+func ResponseUpdated(c *gin.Context, data interface{}) {
+	// TODO: Remove data from response
+	c.JSON(http.StatusOK, gin.H{"message": "data successfully updated", "data": data})
+}
+
 func ResponseBadRequest(c *gin.Context, err error) {
 	c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 }

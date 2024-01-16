@@ -3,17 +3,16 @@ package service
 import (
 	"context"
 
-	"github.com/leocardhio/ecom-catalogue/class"
 	"github.com/leocardhio/ecom-catalogue/db/model"
 	"github.com/leocardhio/ecom-catalogue/db/repository"
-	"github.com/oklog/ulid"
+	"github.com/leocardhio/ecom-catalogue/util"
 )
 
 type IProductService interface {
 	CreateProduct(ctx context.Context, req model.CreateProductRequest) (model.CreateProductResponse, error)
 	GetProduct(ctx context.Context, req model.GetProductRequest) (model.ProductModel, error)
 	GetProducts(ctx context.Context, req model.GetProductsRequest) (model.GetProductsResponse, error)
-	UpdateProduct(ctx context.Context, req model.UpdateProductRequest) error
+	UpdateProduct(ctx context.Context, req model.UpdateProductRequest) (model.UpdateProductResponse, error)
 	DeleteProduct(ctx context.Context, req model.DeleteProductRequest) error
 }
 
@@ -29,23 +28,20 @@ func NewProductService(productRepository repository.IProductRepository) IProduct
 
 func (service *productService) CreateProduct(ctx context.Context, req model.CreateProductRequest) (model.CreateProductResponse, error) {
 	var res model.CreateProductResponse
-	ulid := ulid.MustNew(ulid.Now(), nil)
-	
-	product, err := service.productRepository.CreateProduct(ctx, class.Product{
-		Ulid:        ulid.String(),
+	ulid := util.GetUlid()
+
+	product, err := service.productRepository.CreateProduct(ctx, repository.CreateProductParams{
+		Id:          ulid,
 		Name:        req.Name,
 		Price:       req.Price,
 		Description: req.Description,
 		Condition:   req.Condition,
 	})
-	if err!= nil {
+	if err != nil {
 		return res, err
 	}
 
-	res = model.CreateProductResponse{
-		Ulid:        product.Ulid,
-	}
-
+	res.Id = product.Id
 	return res, nil
 }
 
@@ -63,13 +59,26 @@ func (service *productService) GetProducts(ctx context.Context, req model.GetPro
 	return res, nil
 }
 
-func (service *productService) UpdateProduct(ctx context.Context, req model.UpdateProductRequest) error {	
-	// TODO: To be implemented
-	return nil
+func (service *productService) UpdateProduct(ctx context.Context, req model.UpdateProductRequest) (model.UpdateProductResponse, error) {
+	var res model.UpdateProductResponse
+
+	product, err := service.productRepository.UpdateProduct(ctx, repository.UpdateProductParams{
+		Id:          req.Id,
+		Name:        req.Name,
+		Price:       req.Price,
+		Description: req.Description,
+		Condition:   req.Condition,
+	})
+	if err != nil {
+		return res, err
+	}
+
+	res.Id = product.Id
+
+	return res, nil
 }
 
 func (service *productService) DeleteProduct(ctx context.Context, req model.DeleteProductRequest) error {
 	// TODO: To be implemented
 	return nil
 }
-
