@@ -20,6 +20,7 @@ CREATE TABLE "products" (
 CREATE TABLE "tags" (
   "id" smallserial PRIMARY KEY NOT NULL,
   "name" varchar NOT NULL
+  "deleted_at" timestamptz
 );
 
 CREATE TABLE "users_to_products" (

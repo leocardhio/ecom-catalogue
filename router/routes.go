@@ -10,15 +10,19 @@ import (
 
 type Controllers struct {
 	ProductController controller.IProductController
+	TagsController    controller.ITagsController
 }
 
 func NewRouter(dbs db.Database) *gin.Engine {
 	productRepository := repository.NewProductRepository(dbs)
+	tagsRepository := repository.NewTagsRepository(dbs)
 
 	productService := service.NewProductService(productRepository)
+	tagsService := service.NewTagsService(tagsRepository)
 
 	controllers := Controllers{
 		ProductController: controller.NewProductController(productService),
+		TagsController:    controller.NewTagsController(tagsService),
 	}
 
 	router := gin.New()
@@ -35,10 +39,17 @@ func setMiddleware(r *gin.Engine) {
 
 func setRouter(r *gin.Engine, controllers Controllers) {
 	ver := r.Group("/api/v1")
-	ver.POST("/products", controllers.ProductController.CreateProduct)
-	ver.GET("/products/:id", controllers.ProductController.GetProduct)
-	ver.GET("/products", controllers.ProductController.GetProducts)
-	ver.PUT("/products/:id", controllers.ProductController.UpdateProduct)
-	ver.PATCH("/products/:id/status", controllers.ProductController.UpdateProductStatus)
-	ver.DELETE("/products/:id", controllers.ProductController.DeleteProduct)
+
+	product := ver.Group("/products")
+	product.POST("/", controllers.ProductController.CreateProduct)
+	product.GET("/:id", controllers.ProductController.GetProduct)
+	product.GET("/", controllers.ProductController.GetProducts)
+	product.PUT("/:id", controllers.ProductController.UpdateProduct)
+	product.PATCH("/:id/status", controllers.ProductController.UpdateProductStatus)
+	product.DELETE("/:id", controllers.ProductController.DeleteProduct)
+
+	tag := ver.Group("/tags")
+	tag.POST("/", controllers.TagsController.CreateTag)
+	tag.DELETE("/:id", controllers.TagsController.DeleteTag)
+	tag.PUT("/:id", controllers.TagsController.UpdateTag)
 }
