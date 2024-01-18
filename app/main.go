@@ -10,17 +10,16 @@ import (
 	"github.com/leocardhio/ecom-catalogue/router"
 )
 
-
 func main() {
 	cfg := config.NewConfig().Load()
-	
+
 	sqlcfg := db.SQLConfig{
 		Host:     cfg.SQLHost,
 		Port:     cfg.SQLPort,
 		User:     cfg.SQLUser,
 		Password: cfg.SQLPassword,
 		Database: cfg.SQLDatabase,
-		Driver	: db.SQLType(cfg.SQLDriver),
+		Driver:   db.SQLType(cfg.SQLDriver),
 	}
 
 	escfg := elasticsearch.Config{

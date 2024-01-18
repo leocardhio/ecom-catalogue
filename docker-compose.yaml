@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  catalog-db:
+    build: ./postgres
+    container_name: catalog-db
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-pwd
+      - POSTGRES_DB=ecom-catalog
+  catalog-es:
+    image: elasticsearch:8.10.4
+    container_name: catalog-es
+    ports:
+      - 9200:9200
+      - 9300:9300
+    environment:
+      - discovery.type=single-node
+  # TODO: catalog-app
+

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/leocardhio/ecom-catalogue/db/model"
 	"github.com/leocardhio/ecom-catalogue/db/repository"
+	"github.com/leocardhio/ecom-catalogue/model"
 )
 
 type ITagsService interface {

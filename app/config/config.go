@@ -17,9 +17,9 @@ const (
 )
 
 var (
-	env string
+	env        string
 	_, b, _, _ = runtime.Caller(0)
-	envPath = path.Join(filepath.Dir(b), "env")
+	envPath    = path.Join(filepath.Dir(b), "env")
 )
 
 type Config struct {
@@ -62,7 +62,7 @@ func (c *Config) Load() *Config {
 		err = errors.New(InvalidEnvErr)
 	}
 
-	if err!= nil {
+	if err != nil {
 		panic(err)
 	}
 
@@ -78,7 +78,7 @@ func (c *Config) loadDev() error {
 		return err
 	}
 
-	if err := viper.Unmarshal(c); err!= nil {
+	if err := viper.Unmarshal(c); err != nil {
 		return err
 	}
 

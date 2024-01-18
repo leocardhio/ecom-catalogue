@@ -2,7 +2,7 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/leocardhio/ecom-catalogue/db/model"
+	"github.com/leocardhio/ecom-catalogue/model"
 	"github.com/leocardhio/ecom-catalogue/service"
 	"github.com/leocardhio/ecom-catalogue/util"
 )

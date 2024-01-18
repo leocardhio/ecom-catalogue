@@ -12,7 +12,7 @@ import (
 type SQLType string
 
 const (
-	MYSQL SQLType = "mysql"
+	MYSQL    SQLType = "mysql"
 	POSTGRES SQLType = "postgres"
 )
 
@@ -22,12 +22,12 @@ type SQLConfig struct {
 	User     string
 	Password string
 	Database string
-	Driver SQLType
+	Driver   SQLType
 }
 
 type Database struct {
 	sql *sql.DB
-	es *elasticsearch.Client
+	es  *elasticsearch.Client
 }
 
 func NewDatabase() *Database {
@@ -36,10 +36,10 @@ func NewDatabase() *Database {
 
 func (db *Database) Connect(sqlcfg SQLConfig, escfg elasticsearch.Config) *Database {
 	sqlDB, err := connectSql(sqlcfg)
-	if err!= nil {
+	if err != nil {
 		log.Fatalln("failed to connect to sql", err)
 	}
-	
+
 	// TODO: Uncomment when ready to connect to elasticsearch
 	// esClient, err := connectElasticsearch(escfg)
 	// if err!= nil {
@@ -65,7 +65,7 @@ func (db *Database) GetES() *elasticsearch.Client {
 }
 
 func connectSql(cfg SQLConfig) (*sql.DB, error) {
-	url := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", cfg.User, cfg.Password,cfg.Host, cfg.Port, cfg.Database)
+	url := fmt.Sprintf("postgresql://%s:%s@%s:%s/%s?sslmode=disable", cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Database)
 	db, err := sql.Open("postgres", url)
 	if err != nil {
 		return nil, err

@@ -5,15 +5,15 @@ import (
 	"database/sql"
 
 	"github.com/elastic/go-elasticsearch/v7"
-	"github.com/leocardhio/ecom-catalogue/class"
+	"github.com/leocardhio/ecom-catalogue/datastruct"
 	"github.com/leocardhio/ecom-catalogue/db"
 	"github.com/leocardhio/ecom-catalogue/db/query"
 )
 
 type IProductRepository interface {
 	CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error)
-	GetProduct(ctx context.Context, arg GetProductParams) (class.Product, error)
-	GetProducts(ctx context.Context, arg GetProductsParams) ([]class.Product, error)
+	GetProduct(ctx context.Context, arg GetProductParams) (datastruct.Product, error)
+	GetProducts(ctx context.Context, arg GetProductsParams) ([]datastruct.Product, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error)
 	UpdateProductStatus(ctx context.Context, arg UpdateProductStatusParams) (int64, error)
 	DeleteProduct(ctx context.Context, arg DeleteProductParams) (int64, error)
@@ -36,10 +36,16 @@ type CreateProductParams struct {
 	Name        string
 	Price       uint
 	Description string
-	Condition   class.ProductCondition
+	Condition   datastruct.ProductCondition
+}
+
+func (repo *productRepository) validateTags(tags []datastruct.Tag) bool {
+	// TODO: To be implemented
+	return true
 }
 
 func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
+	// TODO: Apply Tx for Tags to this method
 	var count int64
 
 	result, err := repo.writeDB.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
@@ -58,9 +64,9 @@ type GetProductParams struct {
 	Id string
 }
 
-func (repo *productRepository) GetProduct(ctx context.Context, arg GetProductParams) (class.Product, error) {
+func (repo *productRepository) GetProduct(ctx context.Context, arg GetProductParams) (datastruct.Product, error) {
 	// TODO: To be implemented
-	return class.Product{}, nil
+	return datastruct.Product{}, nil
 }
 
 type GetProductsParams struct {
@@ -68,9 +74,9 @@ type GetProductsParams struct {
 	Offset uint
 }
 
-func (repo *productRepository) GetProducts(ctx context.Context, arg GetProductsParams) ([]class.Product, error) {
+func (repo *productRepository) GetProducts(ctx context.Context, arg GetProductsParams) ([]datastruct.Product, error) {
 	// TODO: To be implemented
-	return []class.Product{}, nil
+	return []datastruct.Product{}, nil
 }
 
 type UpdateProductParams struct {
@@ -78,10 +84,11 @@ type UpdateProductParams struct {
 	Name        string
 	Price       uint
 	Description string
-	Condition   class.ProductCondition
+	Condition   datastruct.ProductCondition
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
+	// TODO: Apply Tx for Tags to this method
 	var count int64
 
 	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)

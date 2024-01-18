@@ -1,3 +1,11 @@
+CREATE TABLE "users" (
+  "id" varchar(26) PRIMARY KEY NOT NULL,
+  "username" varchar(16) UNIQUE NOT NULL,
+  "city" varchar NOT NULL,
+  "rating" real,
+  "updated_at" timestamptz NOT NULL DEFAULT (now())
+);
+
 CREATE TYPE "product_condition" AS ENUM (
   'Brand New',
   'Like New',
@@ -18,9 +26,19 @@ CREATE TABLE "products" (
 );
 
 CREATE TABLE "tags" (
-  "id" smallserial PRIMARY KEY NOT NULL,
-  "name" varchar NOT NULL
+  "id" serial PRIMARY KEY NOT NULL,
+  "name" varchar NOT NULL,
   "deleted_at" timestamptz
+);
+
+CREATE TABLE "reviews" (
+  "from_user_id" varchar(26) NOT NULL,
+  "to_user_id" varchar(26) NOT NULL,
+  "review" text,
+  "rating" smallint,
+  "created_at" timestamptz NOT NULL DEFAULT (now()),
+  "deleted_at" timestamptz,
+  PRIMARY KEY ("from_user_id", "to_user_id")
 );
 
 CREATE TABLE "users_to_products" (
@@ -41,7 +59,14 @@ CREATE TABLE "product_tags" (
   PRIMARY KEY ("product_id", "tag_id")
 );
 
-CREATE INDEX ON "products" ("name");
+
+CREATE INDEX ON "users" ("username");
+
+CREATE INDEX ON "users" ("city");
+
+CREATE INDEX ON "users" ("rating");
+
+CREATE INDEX ON "reviews" ("to_user_id");
 
 CREATE INDEX ON "products" ("condition");
 
@@ -61,6 +86,10 @@ CREATE INDEX ON "product_tags" ("product_id");
 
 CREATE INDEX ON "product_tags" ("tag_id");
 
+CREATE INDEX ON "reviews" ("from_user_id");
+
+CREATE INDEX ON "products" ("name");
+
 ALTER TABLE "users_to_products" ADD FOREIGN KEY ("user_id") REFERENCES "users" ("id");
 
 ALTER TABLE "users_to_products" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
@@ -70,3 +99,7 @@ ALTER TABLE "product_images" ADD FOREIGN KEY ("product_id") REFERENCES "products
 ALTER TABLE "product_tags" ADD FOREIGN KEY ("tag_id") REFERENCES "tags" ("id");
 
 ALTER TABLE "product_tags" ADD FOREIGN KEY ("product_id") REFERENCES "products" ("id");
+
+ALTER TABLE "reviews" ADD FOREIGN KEY ("from_user_id") REFERENCES "users" ("id");
+
+ALTER TABLE "reviews" ADD FOREIGN KEY ("to_user_id") REFERENCES "users" ("id");
