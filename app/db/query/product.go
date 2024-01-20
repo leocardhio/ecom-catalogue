@@ -10,8 +10,22 @@ const (
 		condition
 	) VALUES (
 		$1, $2, $3, $4, $5
-	) RETURNING *
+	)
 `
+
+	CreateProductTags = `
+	INSERT INTO product_tags (
+		product_id,
+		tag_id
+	) VALUES (
+		$1, $2
+	)
+	`
+
+	DeleteProductTags = `
+	DELETE FROM product_tags
+	WHERE product_id = $1
+	`
 
 	UpdateProduct = `
 	UPDATE products

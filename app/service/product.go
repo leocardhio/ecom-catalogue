@@ -2,11 +2,16 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/leocardhio/ecom-catalogue/datastruct"
 	"github.com/leocardhio/ecom-catalogue/db/repository"
 	"github.com/leocardhio/ecom-catalogue/model"
 	"github.com/leocardhio/ecom-catalogue/util"
+)
+
+const (
+	ErrInvalidTags = "invalid tags"
 )
 
 type IProductService interface {
@@ -20,6 +25,50 @@ type IProductService interface {
 
 type productService struct {
 	productRepository repository.IProductRepository
+	tagRepository     repository.ITagsRepository
+}
+
+func (service *productService) getUpdateTagsCommand(productId string, updatedTags []datastruct.Tag) (datastruct.UpdateTagMap, error) {
+	var tagsMap datastruct.UpdateTagMap
+	tags, err := service.tagRepository.GetTagsByProductId(context.Background(), repository.GetTagsByProductIdParams{
+		ProductId: productId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, tag := range tags {
+		tagsMap[tag.Id] = datastruct.REMOVE_TAG
+	}
+
+	for _, tag := range updatedTags {
+		if _, ok := tagsMap[tag.Id]; !ok {
+			tagsMap[tag.Id] = datastruct.ADD_TAG
+		} else {
+			delete(tagsMap, tag.Id)
+		}
+	}
+
+	return tagsMap, nil
+}
+
+func (service *productService) validateTags(productTags []datastruct.Tag) error {
+	tags, err := service.tagRepository.GetTags(context.Background())
+	if err != nil {
+		return err
+	}
+
+	tagTable := map[string]struct{}{}
+	for _, tag := range tags {
+		tagTable[tag.Name] = struct{}{}
+	}
+
+	for _, tag := range productTags {
+		if _, ok := tagTable[tag.Name]; !ok {
+			return errors.New(ErrInvalidTags)
+		}
+	}
+	return nil
 }
 
 func NewProductService(productRepository repository.IProductRepository) IProductService {
@@ -33,6 +82,12 @@ func (service *productService) CreateProduct(ctx context.Context, req model.Crea
 	var err error
 
 	ulid := util.GetUlid()
+
+	err = service.validateTags(req.Tags)
+	if err != nil {
+		return res, err
+	}
+
 	res.Count, err = service.productRepository.CreateProduct(ctx, repository.CreateProductParams{
 		Id:          ulid,
 		Name:        req.Name,
@@ -66,12 +121,22 @@ func (service *productService) UpdateProduct(ctx context.Context, req model.Upda
 	var res model.UpdateProductResponse
 	var err error
 
+	if err = service.validateTags(req.Tags); err != nil {
+		return res, err
+	}
+
+	updateTagCommands, err := service.getUpdateTagsCommand(req.Id, req.Tags)
+	if err != nil {
+		return res, err
+	}
+
 	res.Count, err = service.productRepository.UpdateProduct(ctx, repository.UpdateProductParams{
 		Id:          req.Id,
 		Name:        req.Name,
 		Price:       req.Price,
 		Description: req.Description,
 		Condition:   req.Condition,
+		Commands:    updateTagCommands,
 	})
 	if err != nil {
 		return res, err

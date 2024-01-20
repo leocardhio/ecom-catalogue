@@ -26,8 +26,8 @@ type SQLConfig struct {
 }
 
 type Database struct {
-	sql *sql.DB
-	es  *elasticsearch.Client
+	primary *sql.DB
+	replica *elasticsearch.Client
 }
 
 func NewDatabase() *Database {
@@ -46,22 +46,22 @@ func (db *Database) Connect(sqlcfg SQLConfig, escfg elasticsearch.Config) *Datab
 	// 	log.Fatalln("failed to connect to elasticsearch", err)
 	// }
 
-	db.sql = sqlDB
+	db.primary = sqlDB
 	// db.es = esClient
 
 	return db
 }
 
 func (db *Database) Close() {
-	db.sql.Close()
+	db.primary.Close()
 }
 
-func (db *Database) GetSQL() *sql.DB {
-	return db.sql
+func (db *Database) GetPrimary() *sql.DB {
+	return db.primary
 }
 
-func (db *Database) GetES() *elasticsearch.Client {
-	return db.es
+func (db *Database) GetReplica() *elasticsearch.Client {
+	return db.replica
 }
 
 func connectSql(cfg SQLConfig) (*sql.DB, error) {

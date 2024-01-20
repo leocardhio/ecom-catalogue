@@ -9,6 +9,24 @@ const (
 		) RETURNING id
 	`
 
+	GetTags = `
+		SELECT id, name
+		FROM tags
+		WHERE deleted_at IS NULL
+	`
+
+	GetTagsByProductId = `
+		SELECT product_id, tags_id
+		FROM product_tags
+		WHERE product_id = $1 AND deleted_at IS NULL
+	`
+
+	GetTag = `
+		SELECT id, name
+		FROM tags
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
 	UpdateTag = `
 		UPDATE tags
 		SET name = $1

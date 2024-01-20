@@ -3,11 +3,16 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 
-	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/leocardhio/ecom-catalogue/datastruct"
 	"github.com/leocardhio/ecom-catalogue/db"
 	"github.com/leocardhio/ecom-catalogue/db/query"
+	"github.com/leocardhio/ecom-catalogue/util"
+)
+
+const (
+	ErrInvalidCommand = "invalid command"
 )
 
 type IProductRepository interface {
@@ -20,14 +25,12 @@ type IProductRepository interface {
 }
 
 type productRepository struct {
-	readDB  *elasticsearch.Client
-	writeDB *sql.DB
+	db db.Database
 }
 
 func NewProductRepository(dbs db.Database) IProductRepository {
 	return &productRepository{
-		readDB:  dbs.GetES(),
-		writeDB: dbs.GetSQL(),
+		db: dbs,
 	}
 }
 
@@ -35,29 +38,43 @@ type CreateProductParams struct {
 	Id          string
 	Name        string
 	Price       uint
+	Tags        []datastruct.Tag
 	Description string
 	Condition   datastruct.ProductCondition
 }
 
-func (repo *productRepository) validateTags(tags []datastruct.Tag) bool {
-	// TODO: To be implemented
-	return true
-}
-
 func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
-	// TODO: Apply Tx for Tags to this method
-	var count int64
+	var countTotal int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
-	if err != nil {
-		return count, err
-	}
+	util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
+		var err error
+		result, err := tx.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
+		if err != nil {
+			return err
+		}
 
-	if count, err = result.RowsAffected(); err != nil {
-		return count, err
-	}
+		count, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		countTotal += count
 
-	return count, nil
+		for _, tag := range arg.Tags {
+			_, err = tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tag.Id)
+			if err != nil {
+				return err
+			}
+			count, err = result.RowsAffected()
+			if err != nil {
+				return err
+			}
+			countTotal += count
+		}
+
+		return nil
+	})
+
+	return countTotal, nil
 }
 
 type GetProductParams struct {
@@ -85,22 +102,39 @@ type UpdateProductParams struct {
 	Price       uint
 	Description string
 	Condition   datastruct.ProductCondition
+	Commands    datastruct.UpdateTagMap
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
 	// TODO: Apply Tx for Tags to this method
-	var count int64
+	var countTotal int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
-	if err != nil {
-		return count, err
-	}
+	util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
+		for tid, command := range arg.Commands {
+			switch datastruct.UpdateTagCommand(command) {
+			case datastruct.ADD_TAG:
+				result, err := tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tid)
+				count, err := result.RowsAffected()
+				if err != nil {
+					return err
+				}
+				countTotal += count
+			case datastruct.REMOVE_TAG:
+				result, err := tx.ExecContext(ctx, query.DeleteProductTags, arg.Id, tid)
+				count, err := result.RowsAffected()
+				if err != nil {
+					return err
+				}
+				countTotal += count
+			default:
+				return errors.New(ErrInvalidCommand)
+			}
+		}
 
-	if count, err = result.RowsAffected(); err != nil {
-		return count, err
-	}
+		return nil
+	})
 
-	return count, nil
+	return countTotal, nil
 }
 
 type UpdateProductStatusParams struct {
@@ -111,7 +145,7 @@ type UpdateProductStatusParams struct {
 func (repo *productRepository) UpdateProductStatus(ctx context.Context, arg UpdateProductStatusParams) (int64, error) {
 	var count int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.UpdateProductStatus, arg.IsSold, arg.Id)
+	result, err := repo.db.GetPrimary().ExecContext(ctx, query.UpdateProductStatus, arg.IsSold, arg.Id)
 	if err != nil {
 		return count, err
 	}
@@ -130,7 +164,7 @@ type DeleteProductParams struct {
 func (repo *productRepository) DeleteProduct(ctx context.Context, arg DeleteProductParams) (int64, error) {
 	var count int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.DeleteProduct, arg.Id)
+	result, err := repo.db.GetPrimary().ExecContext(ctx, query.DeleteProduct, arg.Id)
 	if err != nil {
 		return count, err
 	}

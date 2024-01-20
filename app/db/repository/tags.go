@@ -4,23 +4,27 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/leocardhio/ecom-catalogue/datastruct"
 	"github.com/leocardhio/ecom-catalogue/db"
 	"github.com/leocardhio/ecom-catalogue/db/query"
 )
 
 type ITagsRepository interface {
 	CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagResult, error)
+	GetTags(ctx context.Context) ([]datastruct.Tag, error)
+	GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]datastruct.Tag, error)
+	GetTag(ctx context.Context, arg GetTagParams) (*datastruct.Tag, error)
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (int64, error)
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (int64, error)
 }
 
 type tagsRepository struct {
-	writeDB *sql.DB
+	db db.Database
 }
 
 func NewTagsRepository(dbs db.Database) ITagsRepository {
 	return &tagsRepository{
-		writeDB: dbs.GetSQL(),
+		db: dbs,
 	}
 }
 
@@ -36,7 +40,7 @@ type CreateTagResult struct {
 func (repo *tagsRepository) CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagResult, error) {
 	var res CreateTagResult
 
-	result, err := repo.writeDB.ExecContext(ctx, query.CreateTag, arg.Name)
+	result, err := repo.db.GetPrimary().ExecContext(ctx, query.CreateTag, arg.Name)
 	if err != nil {
 		return res, err
 	}
@@ -52,6 +56,67 @@ func (repo *tagsRepository) CreateTag(ctx context.Context, arg CreateTagParams) 
 	return res, nil
 }
 
+func (repo *tagsRepository) GetTags(ctx context.Context) ([]datastruct.Tag, error) {
+	var res []datastruct.Tag
+
+	rows, err := repo.db.GetPrimary().QueryContext(ctx, query.GetTags)
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		var tag datastruct.Tag
+		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
+			return res, err
+		}
+		res = append(res, tag)
+	}
+
+	return res, nil
+}
+
+type GetTagsByProductIdParams struct {
+	ProductId string
+}
+
+func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]datastruct.Tag, error) {
+	var res []datastruct.Tag
+
+	rows, err := repo.db.GetPrimary().QueryContext(ctx, query.GetTagsByProductId, arg.ProductId)
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		var tag datastruct.Tag
+		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
+			return res, err
+		}
+		res = append(res, tag)
+	}
+
+	return res, nil
+}
+
+type GetTagParams struct {
+	Id string
+}
+
+func (repo *tagsRepository) GetTag(ctx context.Context, arg GetTagParams) (*datastruct.Tag, error) {
+	var res datastruct.Tag
+
+	row := repo.db.GetPrimary().QueryRowContext(ctx, query.GetTag, arg.Id)
+	if err := row.Scan(&res.Id, &res.Name); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return &res, err
+		}
+	}
+
+	return &res, nil
+}
+
 type UpdateTagParams struct {
 	Id   string
 	Name string
@@ -60,7 +125,7 @@ type UpdateTagParams struct {
 func (repo *tagsRepository) UpdateTag(ctx context.Context, arg UpdateTagParams) (int64, error) {
 	var count int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.UpdateTag, arg.Name, arg.Id)
+	result, err := repo.db.GetPrimary().ExecContext(ctx, query.UpdateTag, arg.Name, arg.Id)
 	if err != nil {
 		return count, err
 	}
@@ -79,7 +144,7 @@ type DeleteTagParams struct {
 func (repo *tagsRepository) DeleteTag(ctx context.Context, arg DeleteTagParams) (int64, error) {
 	var count int64
 
-	result, err := repo.writeDB.ExecContext(ctx, query.DeleteTag, arg.Id)
+	result, err := repo.db.GetPrimary().ExecContext(ctx, query.DeleteTag, arg.Id)
 	if err != nil {
 		return count, err
 	}
