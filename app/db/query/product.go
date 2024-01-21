@@ -24,7 +24,7 @@ const (
 
 	DeleteProductTags = `
 	DELETE FROM product_tags
-	WHERE product_id = $1
+	WHERE product_id = $1 AND tag_id = $2
 	`
 
 	UpdateProduct = `

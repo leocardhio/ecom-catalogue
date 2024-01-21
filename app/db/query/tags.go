@@ -16,9 +16,9 @@ const (
 	`
 
 	GetTagsByProductId = `
-		SELECT product_id, tags_id
+		SELECT tag_id
 		FROM product_tags
-		WHERE product_id = $1 AND deleted_at IS NULL
+		WHERE product_id = $1
 	`
 
 	GetTag = `

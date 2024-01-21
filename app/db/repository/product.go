@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/leocardhio/ecom-catalogue/datastruct"
 	"github.com/leocardhio/ecom-catalogue/db"
@@ -106,28 +105,44 @@ type UpdateProductParams struct {
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
-	// TODO: Apply Tx for Tags to this method
 	var countTotal int64
 
 	util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
+		var err error
+		result, err := tx.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
+		if err != nil {
+			return err
+		}
+
+		count, err := result.RowsAffected()
+		if err != nil {
+			return err
+		}
+		countTotal += count
+
 		for tid, command := range arg.Commands {
-			switch datastruct.UpdateTagCommand(command) {
-			case datastruct.ADD_TAG:
+			if datastruct.UpdateTagCommand(command) == datastruct.ADD_TAG {
 				result, err := tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tid)
+				if err != nil {
+					return err
+				}
+
 				count, err := result.RowsAffected()
 				if err != nil {
 					return err
 				}
 				countTotal += count
-			case datastruct.REMOVE_TAG:
+			} else {
 				result, err := tx.ExecContext(ctx, query.DeleteProductTags, arg.Id, tid)
+				if err != nil {
+					return err
+				}
+
 				count, err := result.RowsAffected()
 				if err != nil {
 					return err
 				}
 				countTotal += count
-			default:
-				return errors.New(ErrInvalidCommand)
 			}
 		}
 

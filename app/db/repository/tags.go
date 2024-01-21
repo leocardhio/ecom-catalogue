@@ -12,7 +12,7 @@ import (
 type ITagsRepository interface {
 	CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagResult, error)
 	GetTags(ctx context.Context) ([]datastruct.Tag, error)
-	GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]datastruct.Tag, error)
+	GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]GetTagsByProductIdResult, error)
 	GetTag(ctx context.Context, arg GetTagParams) (*datastruct.Tag, error)
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (int64, error)
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (int64, error)
@@ -40,18 +40,12 @@ type CreateTagResult struct {
 func (repo *tagsRepository) CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagResult, error) {
 	var res CreateTagResult
 
-	result, err := repo.db.GetPrimary().ExecContext(ctx, query.CreateTag, arg.Name)
-	if err != nil {
-		return res, err
-	}
+	row := repo.db.GetPrimary().QueryRowContext(ctx, query.CreateTag, arg.Name)
 
-	if res.Count, err = result.RowsAffected(); err != nil {
+	if err := row.Scan(&res.Id); err != nil {
 		return res, err
 	}
-
-	if res.Id, err = result.LastInsertId(); err != nil {
-		return res, err
-	}
+	res.Count += 1
 
 	return res, nil
 }
@@ -79,8 +73,12 @@ type GetTagsByProductIdParams struct {
 	ProductId string
 }
 
-func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]datastruct.Tag, error) {
-	var res []datastruct.Tag
+type GetTagsByProductIdResult struct {
+	TagId string
+}
+
+func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]GetTagsByProductIdResult, error) {
+	var res []GetTagsByProductIdResult
 
 	rows, err := repo.db.GetPrimary().QueryContext(ctx, query.GetTagsByProductId, arg.ProductId)
 	if err != nil {
@@ -88,11 +86,11 @@ func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsB
 	}
 
 	for rows.Next() {
-		var tag datastruct.Tag
-		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
+		var result GetTagsByProductIdResult
+		if err := rows.Scan(&result.TagId); err != nil {
 			return res, err
 		}
-		res = append(res, tag)
+		res = append(res, result)
 	}
 
 	return res, nil

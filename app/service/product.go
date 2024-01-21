@@ -29,16 +29,17 @@ type productService struct {
 }
 
 func (service *productService) getUpdateTagsCommand(productId string, updatedTags []datastruct.Tag) (datastruct.UpdateTagMap, error) {
-	var tagsMap datastruct.UpdateTagMap
-	tags, err := service.tagRepository.GetTagsByProductId(context.Background(), repository.GetTagsByProductIdParams{
+	tagsMap := datastruct.UpdateTagMap{}
+
+	queryRes, err := service.tagRepository.GetTagsByProductId(context.Background(), repository.GetTagsByProductIdParams{
 		ProductId: productId,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	for _, tag := range tags {
-		tagsMap[tag.Id] = datastruct.REMOVE_TAG
+	for _, res := range queryRes {
+		tagsMap[res.TagId] = datastruct.REMOVE_TAG
 	}
 
 	for _, tag := range updatedTags {
@@ -71,9 +72,10 @@ func (service *productService) validateTags(productTags []datastruct.Tag) error 
 	return nil
 }
 
-func NewProductService(productRepository repository.IProductRepository) IProductService {
+func NewProductService(productRepository repository.IProductRepository, tagRepository repository.ITagsRepository) IProductService {
 	return &productService{
 		productRepository: productRepository,
+		tagRepository:     tagRepository,
 	}
 }
 
@@ -92,6 +94,7 @@ func (service *productService) CreateProduct(ctx context.Context, req model.Crea
 		Id:          ulid,
 		Name:        req.Name,
 		Price:       req.Price,
+		Tags:        req.Tags,
 		Description: req.Description,
 		Condition:   req.Condition,
 	})

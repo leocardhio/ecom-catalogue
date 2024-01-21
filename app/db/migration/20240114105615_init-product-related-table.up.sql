@@ -19,7 +19,7 @@ CREATE TABLE "products" (
 
 CREATE TABLE "tags" (
   "id" serial PRIMARY KEY NOT NULL,
-  "name" varchar NOT NULL
+  "name" varchar UNIQUE NOT NULL
   "deleted_at" timestamptz
 );
 

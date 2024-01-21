@@ -18,7 +18,7 @@ func NewRouter(dbs db.Database) *gin.Engine {
 	productRepository := repository.NewProductRepository(dbs)
 	tagsRepository := repository.NewTagsRepository(dbs)
 
-	productService := service.NewProductService(productRepository)
+	productService := service.NewProductService(productRepository, tagsRepository)
 	tagsService := service.NewTagsService(tagsRepository)
 
 	controllers := Controllers{

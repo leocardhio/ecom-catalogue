@@ -19,6 +19,7 @@ type Product struct {
 	Name        string
 	Price       int
 	IsSold      bool
+	Tags        []Tag
 	Description string
 	Condition   ProductCondition
 	UpdatedAt   *time.Time

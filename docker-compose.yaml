@@ -9,7 +9,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD_FILE=/run/secrets/postgres-pwd
-      - POSTGRES_DB=ecom-catalog
+      - POSTGRES_DB=catalog
   catalog-es:
     image: elasticsearch:8.10.4
     container_name: catalog-es
