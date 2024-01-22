@@ -16,6 +16,7 @@ const (
 
 type IProductRepository interface {
 	CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error)
+	GetProductImageUrlsByProductId(ctx context.Context, arg GetImageUrlsByProductIdParams) (GetImageUrlsByProductIdResult, error)
 	GetProduct(ctx context.Context, arg GetProductParams) (datastruct.Product, error)
 	GetProducts(ctx context.Context, arg GetProductsParams) ([]datastruct.Product, error)
 	UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error)
@@ -38,6 +39,7 @@ type CreateProductParams struct {
 	Name        string
 	Price       uint
 	Tags        []datastruct.Tag
+	ImageUrls   []string
 	Description string
 	Condition   datastruct.ProductCondition
 }
@@ -45,9 +47,26 @@ type CreateProductParams struct {
 func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
 	var countTotal int64
 
-	util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
+	err := util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
 		var err error
-		result, err := tx.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
+		var result sql.Result
+
+		//? Image handler
+		for _, imageUrl := range arg.ImageUrls {
+			result, err = tx.ExecContext(ctx, query.CreateProductImage, arg.Id, imageUrl)
+			if err != nil {
+				return err
+			}
+
+			count, err := result.RowsAffected()
+			if err != nil {
+				return err
+			}
+			countTotal += count
+		}
+
+		//? Tags handler
+		result, err = tx.ExecContext(ctx, query.CreateProduct, arg.Id, arg.Name, arg.Price, arg.Description, arg.Condition)
 		if err != nil {
 			return err
 		}
@@ -59,7 +78,7 @@ func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProd
 		countTotal += count
 
 		for _, tag := range arg.Tags {
-			_, err = tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tag.Id)
+			result, err = tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tag.Id)
 			if err != nil {
 				return err
 			}
@@ -73,7 +92,39 @@ func (repo *productRepository) CreateProduct(ctx context.Context, arg CreateProd
 		return nil
 	})
 
+	if err != nil {
+		return countTotal, err
+	}
+
 	return countTotal, nil
+}
+
+type GetImageUrlsByProductIdParams struct {
+	Id string
+}
+
+type GetImageUrlsByProductIdResult struct {
+	ImageUrls []string
+}
+
+func (repo *productRepository) GetProductImageUrlsByProductId(ctx context.Context, arg GetImageUrlsByProductIdParams) (GetImageUrlsByProductIdResult, error) {
+	var res GetImageUrlsByProductIdResult
+
+	rows, err := repo.db.GetPrimary().QueryContext(ctx, query.GetProductImageUrlsByProductId, arg.Id)
+	if err != nil {
+		return res, err
+	}
+
+	for rows.Next() {
+		var imageUrl string
+		if err := rows.Scan(&imageUrl); err != nil {
+			return res, err
+		}
+
+		res.ImageUrls = append(res.ImageUrls, imageUrl)
+	}
+
+	return res, nil
 }
 
 type GetProductParams struct {
@@ -96,20 +147,49 @@ func (repo *productRepository) GetProducts(ctx context.Context, arg GetProductsP
 }
 
 type UpdateProductParams struct {
-	Id          string
-	Name        string
-	Price       uint
-	Description string
-	Condition   datastruct.ProductCondition
-	Commands    datastruct.UpdateTagMap
+	Id               string
+	Name             string
+	Price            uint
+	Description      string
+	Condition        datastruct.ProductCondition
+	TagCommands      datastruct.UpdateTagMap
+	ImageUrlCommands datastruct.UpdateImageUrlMap
 }
 
 func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
 	var countTotal int64
 
-	util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
+	err := util.ExecTx(ctx, repo.db.GetPrimary(), func(tx *sql.Tx) error {
 		var err error
-		result, err := tx.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
+		var result sql.Result
+
+		for url, command := range arg.ImageUrlCommands {
+			if datastruct.UpdateImageUrlCommand(command) == datastruct.ADD_IMAGE_URL {
+				result, err = tx.ExecContext(ctx, query.CreateProductImage, arg.Id, url)
+				if err != nil {
+					return err
+				}
+
+				count, err := result.RowsAffected()
+				if err != nil {
+					return err
+				}
+				countTotal += count
+			} else {
+				result, err = tx.ExecContext(ctx, query.DeleteProductImage, arg.Id, url)
+				if err != nil {
+					return err
+				}
+
+				count, err := result.RowsAffected()
+				if err != nil {
+					return err
+				}
+				countTotal += count
+			}
+		}
+
+		result, err = tx.ExecContext(ctx, query.UpdateProduct, arg.Name, arg.Price, arg.Description, arg.Condition, arg.Id)
 		if err != nil {
 			return err
 		}
@@ -120,7 +200,7 @@ func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProd
 		}
 		countTotal += count
 
-		for tid, command := range arg.Commands {
+		for tid, command := range arg.TagCommands {
 			if datastruct.UpdateTagCommand(command) == datastruct.ADD_TAG {
 				result, err := tx.ExecContext(ctx, query.CreateProductTags, arg.Id, tid)
 				if err != nil {
@@ -145,9 +225,12 @@ func (repo *productRepository) UpdateProduct(ctx context.Context, arg UpdateProd
 				countTotal += count
 			}
 		}
-
 		return nil
 	})
+
+	if err != nil {
+		return countTotal, err
+	}
 
 	return countTotal, nil
 }

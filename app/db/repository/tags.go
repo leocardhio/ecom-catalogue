@@ -12,7 +12,7 @@ import (
 type ITagsRepository interface {
 	CreateTag(ctx context.Context, arg CreateTagParams) (CreateTagResult, error)
 	GetTags(ctx context.Context) ([]datastruct.Tag, error)
-	GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]GetTagsByProductIdResult, error)
+	GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) (GetTagsByProductIdResult, error)
 	GetTag(ctx context.Context, arg GetTagParams) (*datastruct.Tag, error)
 	UpdateTag(ctx context.Context, arg UpdateTagParams) (int64, error)
 	DeleteTag(ctx context.Context, arg DeleteTagParams) (int64, error)
@@ -74,11 +74,11 @@ type GetTagsByProductIdParams struct {
 }
 
 type GetTagsByProductIdResult struct {
-	TagId string
+	TagIds []string
 }
 
-func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) ([]GetTagsByProductIdResult, error) {
-	var res []GetTagsByProductIdResult
+func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsByProductIdParams) (GetTagsByProductIdResult, error) {
+	var res GetTagsByProductIdResult
 
 	rows, err := repo.db.GetPrimary().QueryContext(ctx, query.GetTagsByProductId, arg.ProductId)
 	if err != nil {
@@ -86,11 +86,11 @@ func (repo *tagsRepository) GetTagsByProductId(ctx context.Context, arg GetTagsB
 	}
 
 	for rows.Next() {
-		var result GetTagsByProductIdResult
-		if err := rows.Scan(&result.TagId); err != nil {
+		var result string
+		if err := rows.Scan(&result); err != nil {
 			return res, err
 		}
-		res = append(res, result)
+		res.TagIds = append(res.TagIds, result)
 	}
 
 	return res, nil

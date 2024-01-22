@@ -6,6 +6,7 @@ type CreateProductRequest struct {
 	Name        string                      `json:"name" binding:"required"`
 	Price       uint                        `json:"price" binding:"required"`
 	Tags        []datastruct.Tag            `json:"tags"`
+	ImageUrls   []string                    `json:"imageUrls" binding:"required"`
 	Description string                      `json:"description" binding:"required"`
 	Condition   datastruct.ProductCondition `json:"condition" binding:"required"`
 }
@@ -42,7 +43,8 @@ type UpdateProductRequestURI struct {
 type UpdateProductRequestBody struct {
 	Name        string                      `json:"name" binding:"required"`
 	Price       uint                        `json:"price" binding:"required"`
-	Tags        []datastruct.Tag            `json:"tags" binding:"required"`
+	Tags        []datastruct.Tag            `json:"tags"`
+	ImageUrls   []string                    `json:"imageUrls" binding:"required"`
 	Description string                      `json:"description" binding:"required"`
 	Condition   datastruct.ProductCondition `json:"condition" binding:"required"`
 }

@@ -38,8 +38,8 @@ func (service *productService) getUpdateTagsCommand(productId string, updatedTag
 		return nil, err
 	}
 
-	for _, res := range queryRes {
-		tagsMap[res.TagId] = datastruct.REMOVE_TAG
+	for _, tagId := range queryRes.TagIds {
+		tagsMap[tagId] = datastruct.REMOVE_TAG
 	}
 
 	for _, tag := range updatedTags {
@@ -51,6 +51,31 @@ func (service *productService) getUpdateTagsCommand(productId string, updatedTag
 	}
 
 	return tagsMap, nil
+}
+
+func (service *productService) getUpdateImageCommand(productId string, updatedImageUrls []string) (datastruct.UpdateImageUrlMap, error) {
+	imageMap := datastruct.UpdateImageUrlMap{}
+
+	queryRes, err := service.productRepository.GetProductImageUrlsByProductId(context.Background(), repository.GetImageUrlsByProductIdParams{
+		Id: productId,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, imageUrl := range queryRes.ImageUrls {
+		imageMap[imageUrl] = datastruct.REMOVE_IMAGE_URL
+	}
+
+	for _, imageUrl := range updatedImageUrls {
+		if _, ok := imageMap[imageUrl]; !ok {
+			imageMap[imageUrl] = datastruct.ADD_IMAGE_URL
+		} else {
+			delete(imageMap, imageUrl)
+		}
+	}
+
+	return imageMap, nil
 }
 
 func (service *productService) validateTags(productTags []datastruct.Tag) error {
@@ -139,7 +164,7 @@ func (service *productService) UpdateProduct(ctx context.Context, req model.Upda
 		Price:       req.Price,
 		Description: req.Description,
 		Condition:   req.Condition,
-		Commands:    updateTagCommands,
+		TagCommands: updateTagCommands,
 	})
 	if err != nil {
 		return res, err

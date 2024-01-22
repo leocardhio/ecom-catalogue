@@ -22,6 +22,21 @@ const (
 	)
 	`
 
+	CreateProductImage = `
+	INSERT INTO product_images (
+		product_id,
+		image_url
+	) VALUES (
+		$1, $2
+	)
+	`
+
+	GetProductImageUrlsByProductId = `
+	SELECT image_url
+	FROM product_images
+	WHERE product_id = $1
+	`
+
 	DeleteProductTags = `
 	DELETE FROM product_tags
 	WHERE product_id = $1 AND tag_id = $2
@@ -43,5 +58,10 @@ const (
 	UPDATE products
 	SET deleted_at = NOW()
 	WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	DeleteProductImage = `
+	DELETE FROM product_images
+	WHERE product_id = $1 AND image_url = $2
 	`
 )
